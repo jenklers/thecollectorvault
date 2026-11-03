@@ -55,6 +55,21 @@
       }
     }
 
+    /* Suppress Netlify badge, drawer overlay, and feedback widget from obstructing buttons */
+    [data-netlify-deploy-preview-badge],
+    #netlify-badge,
+    .netlify-badge,
+    iframe#netlify-drawer-iframe,
+    iframe[src*="netlify"],
+    div[class*="netlify-feedback"],
+    div[id*="netlify-drawer"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      z-index: -9999 !important;
+    }
+
     .glass-card {
       background: rgba(15, 23, 42, 0.75);
       backdrop-filter: blur(12px);
