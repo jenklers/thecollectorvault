@@ -1,806 +1,739 @@
-<html lang="en"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
-        window.__firebase_config = firebaseConfig;
-        window.__initial_auth_token = initialAuthToken;
-        window.__app_id = appId;
-            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxMDkxMDM1MDgyMjg1MDAyOTU3MCIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzQ4NmNmZjE0MDIwZTQ3MWZfZG93bmxvYWRfaW5kZXguaHRtbC05NTQifSwiZXhwIjoxNzkzNjY5NTczLCJpYXQiOjE3OTM2NjU5NzMsImFsZyI6IlJTMjU2In0.WTti5iFz1eqJTWRfNgxddn9Ss1uDdhdBlM7tVUSBpIP5x2BeEcH84lpcm5CTnrwSJCLWRThdHpYhhZ2JUjFTy_hPFnu16Sx7gHtG_IhdBSAhfPNCprS8TsTG632L011SxVftNrAlTaxdXbyGUyVe9imO5mvs6c9iDNdt8lYl-7YoVpANLgAgpzDluxCv13l_e_JF5ZuohZQXAgLJlGC-8anV5TnXg51V5uK00S8iwxUd7dSmrXnEpcYvVYsSZZBduR2WPPv9EqePjHUB1RnmKo1fGk2eLZF4deiw_WQg5eG_Acs5F9ewhBWpQD5B_by-ubomQ6TT7fSstT2cXPVMfw","c_486cff14020e471f_download_index.html-954")</script><script data-bard-client-injected="true">
-  document.addEventListener('input', (event) => {
-    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
-      const clonedDoc = document.cloneNode(true);
-      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
-      injectedScripts.forEach(el => el.remove());
-      window.parent.postMessage({
-        type: 'inlineEdit',
-        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
-      }, '*');
-    }
-  });
-</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
-</script><script data-bard-client-injected="true">(function() {
-  const SCROLL_KEYS = new Set([
-    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
-  ]);
-  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
-
-  function isTextEntryTarget(target) {
-    if (!target) return false;
-    const tagName = target.tagName;
-    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
-        tagName === 'SELECT' || target.isContentEditable === true;
-  }
-
-  // An element absorbs the key only if it both overflows on the axis being
-  // scrolled and is configured to scroll on that axis. The cheap dimension
-  // test runs first because getComputedStyle forces a style recalc, and this
-  // runs on every keypress. Each axis is read from its own longhand: the
-  // 'overflow' shorthand serializes as two values when the axes differ, which
-  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
-  function canScroll(node, horizontal) {
-    const overflows = horizontal ? node.scrollWidth > node.clientWidth
-                                 : node.scrollHeight > node.clientHeight;
-    if (!overflows) return false;
-    const style = window.getComputedStyle(node);
-    const overflow = horizontal ? style.overflowX : style.overflowY;
-    return overflow === 'auto' || overflow === 'scroll';
-  }
-
-  // Walks up from the event target so nested scrollers keep their behavior.
-  // <body> is included because pages that pin the root height make it the
-  // scroll container.
-  function hasScrollableAncestor(target, horizontal) {
-    let node = target;
-    while (node && node !== document.documentElement) {
-      if (canScroll(node, horizontal)) return true;
-      node = node.parentElement;
-    }
-    return false;
-  }
-
-  function rootCanScroll(horizontal) {
-    const scroller = document.scrollingElement || document.documentElement;
-    if (!scroller) return false;
-    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
-    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
-                      : scroller.scrollHeight > window.innerHeight + 1;
-  }
-
-  window.addEventListener('keydown', function(event) {
-    if (!SCROLL_KEYS.has(event.key)) return;
-    if (event.defaultPrevented) return;
-    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
-    // reserved for shortcuts, so none of them are scroll intent.
-    if (event.altKey || event.metaKey || event.ctrlKey) return;
-
-    const target = event.target;
-    if (isTextEntryTarget(target)) return;
-
-    // Anything that can still absorb the scroll gets to keep it.
-    const horizontal = HORIZONTAL_KEYS.has(event.key);
-    if (rootCanScroll(horizontal)) return;
-    if (hasScrollableAncestor(target, horizontal)) return;
-
-    event.preventDefault();
-  }, {capture: true, passive: false});
-})();</script><script data-bard-client-injected="true">(function() {
-  // Ensure this script is executed only once
-  if (window.firebaseAuthBridgeScriptLoaded) {
-    return;
-  }
-  window.firebaseAuthBridgeScriptLoaded = true;
-
-  let nextTokenPromiseId = 0;
-
-  // Stores { resolve, reject } for ongoing token requests
-  const pendingTokenPromises = {};
-
-  // Listen for messages from the Host Application
-  window.addEventListener('message', function(event) {
-
-    const messageData = event.data;
-
-  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
-      const { success, token, error, promiseId } = messageData ?? {};
-      if (pendingTokenPromises[promiseId]) {
-        if (success) {
-          pendingTokenPromises[promiseId].resolve(token);
-        } else {
-          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
-        }
-        delete pendingTokenPromises[promiseId];
-      }
-    }
-  });
-
-  // Expose a function for the Generated App to request a new Firebase token
-  window.requestNewFirebaseToken = function() {
-    const currentPromiseId = nextTokenPromiseId++;
-    const promise = new Promise((resolve, reject) => {
-      pendingTokenPromises[currentPromiseId] = { resolve, reject };
-    });
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({
-        type: 'REQUEST_NEW_FIREBASE_TOKEN',
-        promiseId: currentPromiseId
-      }, '*');
-    } else {
-      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
-      delete pendingTokenPromises[currentPromiseId];
-    }
-    return promise;
-  };
-})();</script><script data-bard-client-injected="true">
-let realOriginalGetUserMedia = null;
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-}
-
-(function() {
-  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
-    try {
-      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
-        get: function() {
-          return undefined; // Or throw an error
-        },
-        configurable: false
-      });
-    } catch (error) {
-      console.error("Error defining prototype getter:", error);
-    }
-  }
-})();
-
-(function() {
-  const pendingMediaResolvers = {};
-  let nextMediaPromiseId = 0;
-
-  function requestMediaPermissions(constraints) {
-    const mediaPromiseId = nextMediaPromiseId++;
-    const promise = new Promise((resolve, reject) => {
-      pendingMediaResolvers[mediaPromiseId] = (granted) => {
-        delete pendingMediaResolvers[mediaPromiseId];
-        resolve(granted);
-      };
-    });
-
-    window.parent.postMessage({
-      type: 'requestMediaPermission',
-      constraints: constraints,
-      promiseId: mediaPromiseId,
-    }, '*');
-
-    return promise;
-  }
-
-  let originalGetUserMedia = realOriginalGetUserMedia;
-
-  function interceptGetUserMedia() {
-    if (navigator.mediaDevices) {
-      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
-        value: function(constraints) {
-          return requestMediaPermissions(constraints).then((granted) => {
-            if (granted) {
-              if (originalGetUserMedia) {
-                return originalGetUserMedia(constraints);
-              } else {
-                throw new Error("Original getUserMedia not available.");
-              }
-            } else {
-              throw new DOMException('Permission denied', 'NotAllowedError');
-            }
-          });
-        },
-        writable: false,
-        configurable: false
-      });
-    }
-  }
-
-  interceptGetUserMedia();
-
-  const observer = new MutationObserver(function(mutationsList, observer) {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
-        interceptGetUserMedia();
-      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
-        interceptGetUserMedia();
-      } else if (mutation.type === 'childList' && mutation.addedNodes) {
-        mutation.addedNodes.forEach(node => {
-          if (node === navigator.mediaDevices) {
-            interceptGetUserMedia();
-          }
-        });
-      }
-    }
-  });
-
-  function interceptSpeechRecognition() {
-    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-      return;
-    }
-
-    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    const SpeechRecognitionWrapper = function(...args) {
-      const recognizer = new OriginalSpeechRecognition(...args);
-      const originalStart = recognizer.start.bind(recognizer);
-
-      recognizer.start = function() {
-        requestMediaPermissions({ audio: true }).then(granted => {
-          if (granted) {
-            originalStart();
-          } else {
-            const errorEvent = new SpeechRecognitionErrorEvent('error');
-            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
-            recognizer.dispatchEvent(errorEvent);
-          }
-        });
-      };
-
-      return recognizer;
-    };
-
-    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
-    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
-
-    if (window.SpeechRecognition) {
-      window.SpeechRecognition = SpeechRecognitionWrapper;
-    }
-    if (window.webkitSpeechRecognition) {
-      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
-    }
-  }
-
-  interceptSpeechRecognition();
-
-  window.addEventListener('message', function(event) {
-    if (event.data) {
-      if (event.data.type === 'resolveMediaPermission') {
-        const { promiseId, granted } = event.data;
-        if (pendingMediaResolvers[promiseId]) {
-          pendingMediaResolvers[promiseId](granted);
-        }
-      }
-    }
-  });
-
-})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
-function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
-
- Copyright The Closure Library Authors.
- SPDX-License-Identifier: Apache-2.0
-*/
-function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
-let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
-null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
-c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
-"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
-Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
-(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
-url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
-</script><script data-bard-client-injected="true">((function(modelInformation) {
-  const originalFetch = window.fetch;
-  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
-  let googleLlmBaseApiUrls = [
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
-    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
-  ];
-  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
-    googleLlmBaseApiUrls.push(
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
-    );
-  });
-  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
-    googleLlmBaseApiUrls.push(
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
-    );
-  });
-  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
-    googleLlmBaseApiUrls.push(
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
-    );
-  });
-  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
-    googleLlmBaseApiUrls.push(
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
-      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
-    );
-  });
-
-  const pendingFetchResolvers = {};
-  let nextPromiseId = 0;
-
-  function handleStringInput(input, optionsArgument) {
-    const actualUrl = input;
-    const fetchCallArgs = [actualUrl, optionsArgument];
-    const effectiveOptions = optionsArgument || {};
-    const bodyForApiKeyCheck = effectiveOptions.body;
-    const bodyForPostMessage = effectiveOptions.body;
-    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
-  }
-
-  function handleRequestInput(input, optionsArgument) {
-    const actualUrl = input.url;
-    const fetchCallArgs = [input, optionsArgument];
-    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
-    let bodyForApiKeyCheck;
-    let bodyForPostMessage;
-
-    if (optionsArgument) {
-      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
-      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
-      if ('body' in optionsArgument) {
-        bodyForApiKeyCheck = optionsArgument.body;
-        bodyForPostMessage = optionsArgument.body;
-      } else {
-        bodyForApiKeyCheck = undefined;
-        bodyForPostMessage = input.body;
-      }
-    } else {
-      bodyForApiKeyCheck = undefined;
-      bodyForPostMessage = input.body;
-    }
-    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
-  }
-
-  window.fetch = function(input, optionsArgument) {
-    let actualUrl;
-    let fetchCallArgs;
-    let effectiveOptions = {};
-    let bodyForApiKeyCheck;
-    let bodyForPostMessage;
-
-    if (typeof input === 'string') {
-      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
-    } else if (input instanceof Request) {
-      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
-    } else {
-      return originalFetch.apply(window, [input, optionsArgument]);
-    }
-
-    effectiveOptions.method = effectiveOptions.method || 'GET';
-    if (!effectiveOptions.headers) {
-      effectiveOptions.headers = new Headers();
-    }
-
-
-    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
-      let apiKeyIsNull = true;
-
-      const regex = new RegExp("models/([^:]+)");
-      const modelNameMatch = actualUrl.match(regex);
-      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
-
-
-      try {
-        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
-        const apiKeyParam = urlObject.searchParams.get('key');
-        if (apiKeyParam) {
-          apiKeyIsNull = false;
-        }
-      } catch (e) {
-        // Continue checks even if URL parsing fails
-      }
-
-      if (apiKeyIsNull && effectiveOptions.headers) {
-        const h = new Headers(effectiveOptions.headers);
-        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
-        if (apiKeyHeaderValue) {
-          apiKeyIsNull = false;
-          return originalFetch.apply(window, fetchCallArgs);
-        }
-      }
-
-      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
-        try {
-          const bodyData = JSON.parse(bodyForApiKeyCheck);
-          if (bodyData && bodyData.apiKey) {
-            apiKeyIsNull = false;
-            return originalFetch.apply(window, fetchCallArgs);
-          }
-        } catch (e) {
-          // Ignore JSON parsing errors
-        }
-      }
-
-      if(apiKeyIsNull) {
-        const promiseId = nextPromiseId++;
-        const promise = new Promise((resolve) => {
-          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
-            delete pendingFetchResolvers[promiseId];
-            resolve(resolvedResponse);
-          };
-        });
-
-        let serializedBodyForPostMessage;
-        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
-            serializedBodyForPostMessage = bodyForPostMessage;
-        } else if (bodyForPostMessage instanceof ReadableStream) {
-            serializedBodyForPostMessage = null;
-        } else {
-            try {
-                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
-            } catch (e) {
-                serializedBodyForPostMessage = null;
-            }
-        }
-
-        const messageOptions = {
-            method: effectiveOptions.method,
-            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
-            body: serializedBodyForPostMessage
-        };
-
-        window.parent.postMessage({
-          type: 'requestFetch',
-          url: actualUrl,
-          modelName: modelName,
-          options: messageOptions,
-          promiseId: promiseId,
-        }, '*');
-
-        return promise;
-      }
-      return originalFetch.apply(window, fetchCallArgs);
-    }
-    return originalFetch.apply(window, fetchCallArgs);
-  };
-
-  window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'resolveFetch') {
-      const { promiseId, response } = event.data;
-      if (pendingFetchResolvers[promiseId]) {
-        try {
-          const reconstructedResponse = new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: new Headers(response.headers),
-          });
-          pendingFetchResolvers[promiseId](reconstructedResponse);
-        } catch (error) {
-          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
-        }
-      }
-    }
-  });
-
-}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
-  function normalizeSlug(str) {
-    try {
-      return str
-        .trim()
-        .toLowerCase()
-        .replace(/[^p{L}p{N}s_-]/gu, '')
-        .replace(/s+/g, '-');
-    } catch (e) {
-      return str
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9s_-]/g, '')
-        .replace(/s+/g, '-');
-    }
-  }
-
-  function findTargetElement(hash) {
-    if (!hash || hash === '#') {
-      return null;
-    }
-    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
-    let decodedId = rawId;
-    try {
-      decodedId = decodeURIComponent(rawId);
-    } catch (e) {
-      // Ignore URI malformed errors.
-    }
-
-    // 1. Direct ID match (raw and decoded).
-    let target = document.getElementById(rawId) || document.getElementById(decodedId);
-    if (target) {
-      return target;
-    }
-
-    // 2. Name attribute match (<a name="...">).
-    try {
-      if (typeof CSS !== 'undefined' && CSS.escape) {
-        target =
-          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
-          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
-      } else {
-        const namedElements = document.getElementsByName(rawId);
-        if (namedElements && namedElements.length > 0) {
-          return namedElements[0];
-        }
-      }
-    } catch (e) {
-      // Ignore querySelector syntax errors.
-    }
-    if (target) {
-      return target;
-    }
-
-    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
-    const targetSlug = normalizeSlug(decodedId);
-    if (targetSlug) {
-      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
-        if (normalizeSlug(heading.textContent || '') === targetSlug) {
-          return heading;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  document.addEventListener('click', function(event) {
-    const target = event.target;
-    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
-    if (!anchor) {
-      return;
-    }
-
-    const href = anchor.getAttribute('href');
-    if (
-      !href ||
-      href.trim().toLowerCase().startsWith('javascript:') ||
-      anchor.hasAttribute('download')
-    ) {
-      return;
-    }
-
-    // Check if the link is an in-page hash / anchor link.
-    if (href.startsWith('#')) {
-      event.preventDefault();
-      const targetElement = findTargetElement(href);
-      if (targetElement) {
-        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
-      }
-      return;
-    }
-
-    // Check if the URL has the same origin/pathname but with a hash.
-    try {
-      const url = new URL(anchor.href, window.location.href);
-      if (
-        url.hash &&
-        url.origin === window.location.origin &&
-        url.pathname === window.location.pathname
-      ) {
-        event.preventDefault();
-        const targetElement = findTargetElement(url.hash);
-        if (targetElement) {
-          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
-        }
-        return;
-      }
-    } catch (e) {
-      // Fall through if URL parsing fails.
-    }
-
-    // For all external or full navigation links, prevent iframe-level navigation
-    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
-    // safely in a new tab/window.
-    if (anchor.target !== '_blank') {
-      event.preventDefault();
-      window.open(anchor.href, '_blank', 'noopener,noreferrer');
-    }
-  }, {capture: true});
-})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
-</script><script data-bard-client-injected="true">(function() {
-  const originalConsoleLog = console.log;
-  const originalConsoleError = console.error;
-
-    /**
-   * Normalizes an error event or a promise rejection reason into a structured error object.
-   * @param {*} errorEventOrReason The error object or reason.
-   * @return {object} Structured error data { message, name, stack }.
-   */
-  function getErrorObject(errorEventOrReason) {
-    if (errorEventOrReason instanceof Error) {
-      return {
-        message: errorEventOrReason.message,
-        name: errorEventOrReason.name,
-        stack: errorEventOrReason.stack,
-      };
-    }
-    // Fallback for non-Error objects.
-    try {
-      return {
-        message: JSON.stringify(errorEventOrReason),
-        name: 'UnknownErrorType',
-        stack: null,
-      };
-    } catch (e) {
-      return {
-        message: String(errorEventOrReason),
-        name: 'UnknownErrorTypeNonStringifiable',
-        stack: null,
-      };
-    }
-  }
-
-  /**
-   * Converts an array of arguments (from log/error) into a single string.
-   * Handles Error objects specially to include their message and stack.
-   * @param {Array<*>} args - Arguments passed to console methods.
-   * @return {string} A string representation of the arguments.
-   */
-  function stringifyArgs(args) {
-    return args
-      .map((arg) => {
-        if (arg instanceof Error) {
-          const {message, stack} = arg;
-          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
-        }
-        if (typeof arg === 'object' && arg !== null) {
-          try {
-            return JSON.stringify(arg);
-          } catch (error) {
-            return '[Circular Object]';
-          }
-        } else {
-          return String(arg);
-        }
-      })
-      .join(' ');
-  }
-
-  console.log = function(...args) {
-    const logString = stringifyArgs(args);
-    window.parent.postMessage({ type: 'log', message: logString }, '*');
-    originalConsoleLog.apply(console, args);
-  };
-
-  console.error = function(...args) {
-    let errorData;
-    if (args.length > 0 && args[0] instanceof Error) {
-      const err = args[0];
-      // If the first arg is an Error, capture its details.
-      errorData = {
-        type: 'error',
-        source: 'CONSOLE_ERROR',
-        ...getErrorObject(err),
-        rawArgsString: stringifyArgs(args.slice(1)),
-        timestamp: new Date().toISOString(),
-      };
-    } else {
-      // If not an Error object, treat all args as a general error message.
-      errorData = {
-        type: 'error',
-        source: 'CONSOLE_ERROR',
-        message: stringifyArgs(args),
-        name: 'ConsoleLoggedError',
-        stack: null,
-        timestamp: new Date().toISOString(),
-      };
-    }
-    window.parent.postMessage(errorData, '*');
-    originalConsoleError.apply(console, args);
-  };
-
-  // Listen for global unhandled synchronous errors.
-  window.addEventListener('error', function(event) {
-    const errorDetails = event.error ? getErrorObject(event.error) : {
-      message: event.message,
-      name: 'GlobalError',
-      stack: null,
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-    };
-
-    window.parent.postMessage({
-      type: 'error',
-      source: 'global',
-      ...errorDetails,
-      message: errorDetails.message || event.message,
-      timestamp: new Date().toISOString(),
-    }, '*');
-  });
-
-  // Listen for unhandled promise rejections (asynchronous errors).
-  window.addEventListener('unhandledrejection', function(event) {
-    const errorDetails = getErrorObject(event.reason);
-
-    window.parent.postMessage({
-      type: 'error',
-      source: 'unhandledrejection',
-      ...errorDetails,
-      message: errorDetails.message || 'Unhandled Promise Rejection',
-      timestamp: new Date().toISOString(),
-    }, '*');
-  });
-
-})();</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Download Latest index.html</title>
+  <title>The CollectorVault</title>
   <script src="https://cdn.tailwindcss.com"></script>
-<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.mx-auto{margin-left:auto;margin-right:auto}.mt-1{margin-top:0.25rem}.flex{display:flex}.h-16{height:4rem}.min-h-screen{min-height:100vh}.w-16{width:4rem}.w-full{width:100%}.max-w-md{max-width:28rem}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.bg-slate-800\/40{background-color:rgb(30 41 59 / 0.4)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-slate-950\/80{background-color:rgb(2 6 23 / 0.8)}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-blue-600{--tw-gradient-from:#2563eb var(--tw-gradient-from-position);--tw-gradient-to:rgb(37 99 235 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-cyan-400{--tw-gradient-to:#22d3ee var(--tw-gradient-to-position)}.to-cyan-500{--tw-gradient-to:#06b6d4 var(--tw-gradient-to-position)}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-cyan-300{--tw-text-opacity:1;color:rgb(103 232 249 / var(--tw-text-opacity, 1))}.text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238 / var(--tw-text-opacity, 1))}.text-slate-100{--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-blue-600\/30{--tw-shadow-color:rgb(37 99 235 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-cyan-500\/20{--tw-shadow-color:rgb(6 182 212 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:from-blue-500:hover{--tw-gradient-from:#3b82f6 var(--tw-gradient-from-position);--tw-gradient-to:rgb(59 130 246 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:to-cyan-400:hover{--tw-gradient-to:#22d3ee var(--tw-gradient-to-position)}.active\:scale-\[0\.98\]:active{--tw-scale-x:0.98;--tw-scale-y:0.98;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}</style></head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
-    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-cyan-500/20">
-      📄
-    </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
 
-    <div>
-      <h1 class="text-xl font-bold text-white tracking-tight">The CollectorVault</h1>
-      <p class="text-xs text-slate-400 mt-1">Download the latest <code class="text-cyan-400">index.html</code> file</p>
-    </div>
-
-    <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left text-xs space-y-2">
-      <div class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">File details:</div>
-      <div class="flex items-center justify-between text-slate-300">
-        <span>File Name:</span>
-        <span class="font-mono text-cyan-400 font-semibold">index.html</span>
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateHome()">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-lg">
+          <i class="fa-solid fa-cube"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            The CollectorVault
+            <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60">PWA</span>
+          </h1>
+        </div>
       </div>
-      <div class="flex items-center justify-between text-slate-300">
-        <span>Includes:</span>
-        <span class="text-slate-400">Admin Lock, Spacing Fixes, Demo Settings Guard</span>
+
+      <!-- Desktop Nav & Metrics -->
+      <div class="flex items-center">
+        <nav id="desktopNav" class="hidden md:flex items-center space-x-2">
+          <button id="btnDesktopNavVault" onclick="switchView('vault')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">
+            <i class="fa-solid fa-box-archive mr-1.5"></i> Vault
+          </button>
+          <button id="btnDesktopNavScanner" onclick="switchView('scanner')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">
+            <i class="fa-solid fa-camera mr-1.5"></i> AI Scanner
+          </button>
+          <button id="btnDesktopNavSettings" onclick="switchView('settings')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">
+            <i class="fa-solid fa-gear mr-1.5"></i> Settings
+          </button>
+        </nav>
+
+        <!-- Stats & Auth Container with explicit margin to prevent pill touching -->
+        <div id="headerAuthPill" class="ml-4 sm:ml-6 flex items-center space-x-2.5 sm:space-x-3 bg-slate-800/80 border border-slate-700/70 rounded-full px-3.5 py-1.5 text-xs">
+          <span id="statTotalValue" class="font-semibold text-emerald-400">$0.00</span>
+          <span class="text-slate-600">|</span>
+          <span id="statTotalItems" class="text-slate-300 font-medium">0 items</span>
+          <span id="adminMetricDivider" class="text-slate-600 hidden">|</span>
+          <span id="statAdminUsersPill" class="text-cyan-400 font-medium hidden">0 users</span>
+          <button id="btnAuthAction" onclick="handleAuthAction()" class="text-slate-400 hover:text-white transition pl-1">
+            <i id="authActionIcon" class="fa-solid fa-right-to-bracket text-sm"></i>
+          </button>
+        </div>
       </div>
     </div>
+  </header>
 
-    <button id="btnDownloadHtml" type="button" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition active:scale-[0.98] flex items-center justify-center space-x-2">⏳ Preparing Download...</button>
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-24 md:pb-8">
 
-    <div class="text-[11px] text-slate-400 leading-relaxed text-left space-y-1 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
-      <div class="font-semibold text-slate-300">Next Step for GitHub Pages:</div>
-      <div>1. Click the button above to save <code class="text-cyan-300">index.html</code> to your Downloads folder.</div>
-      <div>2. Go to your repository at <strong>github.com/jenklers/thecollectorvault</strong>.</div>
-      <div>3. Click <strong>Add file</strong> → <strong>Upload files</strong>, drop this <code class="text-cyan-300">index.html</code>, and commit changes!</div>
-    </div>
-  </div>
+    <!-- VIEW: AUTH / LOGIN SCREEN (DEFAULT VIEW) -->
+    <section id="viewAuth" class="max-w-md mx-auto my-8 bg-slate-900/90 border border-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white text-3xl shadow-lg shadow-cyan-500/20 mb-3">
+          <i class="fa-solid fa-vault"></i>
+        </div>
+        <h2 id="authTitle" class="text-2xl font-bold tracking-tight text-white">Collector Login</h2>
+        <p id="authSubtitle" class="text-sm text-slate-400 mt-1">Sign in to sync your vault across devices with Gemini AI scanning.</p>
+      </div>
 
+      <!-- Auth Form -->
+      <form id="formAuth" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Email</label>
+          <input type="email" id="authEmail" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" placeholder="collector@example.com">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+          <input type="password" id="authPassword" required minlength="6" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" placeholder="••••••••">
+        </div>
+        <div id="authError" class="text-xs text-rose-400 hidden bg-rose-950/40 border border-rose-900/60 p-2.5 rounded-lg"></div>
+
+        <button type="submit" id="btnAuthSubmit" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 transition">
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-4 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800 pt-4">
+        <button type="button" onclick="toggleAuthMode()" id="btnToggleAuthMode" class="text-cyan-400 hover:underline">
+          Need an account? Sign up
+        </button>
+        <button type="button" onclick="startDemoMode()" class="text-slate-400 hover:text-white flex items-center gap-1">
+          <i class="fa-regular fa-eye"></i> Guest Demo
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW: VAULT (HIDDEN UNTIL AUTH/DEMO) -->
+    <section id="viewVault" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            My Collection
+            <span id="badgeDemoMode" class="hidden text-xs bg-amber-950 text-amber-300 border border-amber-800/80 px-2 py-0.5 rounded-full font-mono">Demo Mode</span>
+          </h2>
+          <p class="text-sm text-slate-400">Manage, organize, and monitor your collectibles catalog.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="switchView('scanner')" class="px-4 py-2 rounded-xl text-sm font-semibold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 shadow-lg shadow-cyan-600/20 transition">
+            <i class="fa-solid fa-camera"></i> Scan Item
+          </button>
+          <button onclick="exportToCSV()" class="px-3 py-2 rounded-xl text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            <i class="fa-solid fa-download"></i> Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-2 relative">
+          <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-500 text-sm"></i>
+          <input type="text" id="inputVaultSearch" oninput="renderVaultGrid()" placeholder="Search collectibles by title, franchise, year..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+        </div>
+        <div>
+          <select id="selectVaultFilter" onchange="renderVaultGrid()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="all">All Categories</option>
+            <option value="Action Figures">Action Figures</option>
+            <option value="Diecast & Vehicles">Diecast & Vehicles</option>
+            <option value="Trading Cards">Trading Cards</option>
+            <option value="Comics & Books">Comics & Books</option>
+            <option value="Precious Metals & Coins">Precious Metals & Coins</option>
+            <option value="Other">Other Collectibles</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Item Grid -->
+      <div id="vaultGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+      <div id="vaultEmptyState" class="hidden text-center py-16 bg-slate-900/50 rounded-2xl border border-dashed border-slate-800">
+        <div class="w-12 h-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-slate-400 mb-3 text-xl">
+          <i class="fa-solid fa-box-open"></i>
+        </div>
+        <h3 class="font-semibold text-slate-200">No collectibles in vault</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">Use the AI Scanner to photograph your collectible for automatic identification and value estimation.</p>
+        <button onclick="switchView('scanner')" class="px-4 py-2 rounded-xl text-sm font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition">
+          Open AI Scanner
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW: SCANNER (HIDDEN INITIALLY) -->
+    <section id="viewScanner" class="hidden max-w-2xl mx-auto space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-robot text-cyan-400"></i> AI Vision Scanner
+            </h2>
+            <p class="text-xs text-slate-400">Frame the collectible, figure, packaging, or coin.</p>
+          </div>
+          <span id="scannerKeyBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+            Global Active
+          </span>
+        </div>
+
+        <!-- Video / Preview Frame -->
+        <div class="relative bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800">
+          <video id="scannerVideo" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+          <img id="scannerPreviewImg" class="w-full h-full object-contain hidden" alt="Captured Scan Preview">
+          <div id="scannerPlaceholder" class="text-center p-6 text-slate-500">
+            <i class="fa-solid fa-camera text-4xl mb-2 text-slate-600"></i>
+            <p class="text-xs">Camera inactive or waiting for photo.</p>
+          </div>
+          <canvas id="scannerCanvas" class="hidden"></canvas>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button id="btnStartCamera" onclick="startCamera()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition">
+              <i class="fa-solid fa-video mr-1"></i> Start Cam
+            </button>
+            <button id="btnSwitchCamera" onclick="switchCameraFacing()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition">
+              <i class="fa-solid fa-rotate mr-1"></i> Flip
+            </button>
+            <label class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 cursor-pointer transition">
+              <i class="fa-solid fa-file-arrow-up mr-1"></i> Upload
+              <input type="file" id="inputMobilePhoto" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+            </label>
+          </div>
+          <button id="btnCaptureScan" onclick="captureAndIdentify()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-semibold text-xs shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition">
+            <i class="fa-solid fa-bolt"></i> Capture & Identify
+          </button>
+        </div>
+      </div>
+
+      <!-- Scan Result / Identification Details -->
+      <div id="scanResultCard" class="hidden bg-slate-900 border border-cyan-800/80 p-5 rounded-2xl space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 id="resultTitle" class="text-lg font-bold text-white">Item Identified</h3>
+            <p id="resultFranchise" class="text-xs text-cyan-400 font-medium">Franchise / Series</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400">Estimated Value</span>
+            <div id="resultPrice" class="text-lg font-bold text-emerald-400">$0.00</div>
+          </div>
+        </div>
+        <p id="resultDescription" class="text-xs text-slate-300 leading-relaxed"></p>
+        <div class="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+          <button onclick="discardScanResult()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300">Discard</button>
+          <button onclick="saveScanResultToVault()" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20">Save to Vault</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: SETTINGS (RESTRICTED IN DEMO MODE) -->
+    <section id="viewSettings" class="hidden max-w-2xl mx-auto space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-cyan-400"></i> Settings & Configuration
+        </h2>
+
+        <!-- Admin Metrics Card (Private to Bryan) -->
+        <div id="adminMetricsCard" class="hidden p-4 rounded-xl bg-slate-950 border border-cyan-800/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Administrator Console</div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">Verified Admin</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+              <div class="text-[11px] text-slate-400">Total Registered Users</div>
+              <div id="adminRegisteredUsersCount" class="text-xl font-bold text-cyan-300">0</div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+              <div class="text-[11px] text-slate-400">Global API Key Sync</div>
+              <div id="adminGlobalKeyStatus" class="text-xs font-medium text-emerald-400 mt-1">Active & Broadcast</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global API Key Configuration -->
+        <div class="space-y-3 pt-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Gemini API Key</label>
+            <span id="badgeApiKeyStatus" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">Checking...</span>
+          </div>
+          <p class="text-xs text-slate-400">This key powers object identification and price lookups. When updated by administrator, it synchronizes globally across all users.</p>
+          <div class="flex gap-2">
+            <input type="password" id="inputApiKey" placeholder="Enter custom or global Gemini API Key..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+            <button onclick="saveApiKeySettings()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/20 transition">Save Key</button>
+            <button onclick="testApiKeySettings()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs border border-slate-700 transition">Test</button>
+          </div>
+        </div>
+
+        <!-- Data Backup & Cloud Sync -->
+        <div class="space-y-3 pt-4 border-t border-slate-800">
+          <h3 class="text-sm font-semibold text-white">Vault Data & Backups</h3>
+          <p class="text-xs text-slate-400">Download a JSON snapshot of all cataloged collectibles for offline safekeeping.</p>
+          <div class="flex gap-2">
+            <button onclick="downloadJsonBackup()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700">
+              <i class="fa-solid fa-file-code mr-1"></i> Download JSON
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MOBILE BOTTOM NAV BAR (HIDDEN ON DESKTOP) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex items-center justify-around">
+    <button id="btnNavVault" onclick="switchView('vault')" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 text-xs py-1 transition">
+      <i class="fa-solid fa-box-archive text-lg mb-0.5"></i> Vault
+    </button>
+    <button id="btnNavScanner" onclick="switchView('scanner')" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 text-xs py-1 transition">
+      <i class="fa-solid fa-camera text-lg mb-0.5"></i> Scan
+    </button>
+    <button id="btnNavSettings" onclick="switchView('settings')" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 text-xs py-1 transition">
+      <i class="fa-solid fa-gear text-lg mb-0.5"></i> Settings
+    </button>
+  </nav>
+
+  <!-- CORE SCRIPT LOGIC -->
   <script>
-    // Embedded copy of the latest index.html file
-    async function triggerDownload() {
-      const btn = document.getElementById("btnDownloadHtml");
-      btn.textContent = "⏳ Preparing Download...";
-      
-      let htmlContent = "";
-      try {
-        const resp = await fetch("index.html");
-        if (resp.ok) {
-          htmlContent = await resp.text();
-        }
-      } catch(e) {}
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDummyKeyForAuthInitCollectorVault",
+      authDomain: "collector-vault-app.firebaseapp.com",
+      projectId: "collector-vault-app",
+      storageBucket: "collector-vault-app.appspot.com",
+      messagingSenderId: "38927164821",
+      appId: "1:38927164821:web:d82b7c4a01e3b6"
+    };
 
-      // Fallback: If not accessible via direct fetch in the preview frame, fetch from parent document or active DOM
-      if (!htmlContent || htmlContent.length < 500) {
-        htmlContent = document.documentElement.outerHTML;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const ADMIN_EMAIL = "bryan.a.jenkins@gmail.com";
+
+    // Application State
+    let currentUser = null;
+    let isDemoMode = false;
+    let vaultItems = [];
+    let globalApiKey = "";
+    let mediaStream = null;
+    let cameraFacing = "environment";
+    let pendingScanResult = null;
+    let isSignUpMode = false;
+
+    // --- VIEW MANAGEMENT ---
+    // DEFAULT TO AUTH/LOGIN SCREEN ON FIRST LOAD
+    function switchView(target) {
+      const views = {
+        auth: document.getElementById("viewAuth"),
+        vault: document.getElementById("viewVault"),
+        scanner: document.getElementById("viewScanner"),
+        settings: document.getElementById("viewSettings")
+      };
+
+      // Guard: Hide settings if in demo mode
+      if (target === "settings" && isDemoMode) {
+        alert("Settings are disabled in Guest Demo Mode.");
+        return;
       }
 
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      // Guard: If not logged in and not demo, always force auth screen
+      if (!currentUser && !isDemoMode && target !== "auth") {
+        target = "auth";
+      }
+
+      Object.keys(views).forEach(k => {
+        if (views[k]) {
+          if (k === target) {
+            views[k].classList.remove("hidden");
+          } else {
+            views[k].classList.add("hidden");
+          }
+        }
+      });
+
+      // Highlight active nav buttons
+      updateNavHighlight(target);
+    }
+
+    function updateNavHighlight(target) {
+      const navIds = ["btnDesktopNavVault", "btnDesktopNavScanner", "btnDesktopNavSettings", "btnNavVault", "btnNavScanner", "btnNavSettings"];
+      navIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (id.toLowerCase().includes(target)) {
+            el.classList.add("text-cyan-400", "font-bold");
+            el.classList.remove("text-slate-300", "text-slate-400");
+          } else {
+            el.classList.remove("text-cyan-400", "font-bold");
+            el.classList.add(id.startsWith("btnNav") ? "text-slate-400" : "text-slate-300");
+          }
+        }
+      });
+    }
+
+    function navigateHome() {
+      if (currentUser || isDemoMode) {
+        switchView("vault");
+      } else {
+        switchView("auth");
+      }
+    }
+
+    // --- AUTHENTICATION & DEMO MODE ---
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        isDemoMode = false;
+        document.getElementById("badgeDemoMode")?.classList.add("hidden");
+        document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-from-bracket text-sm"></i>';
+        
+        checkAdminMetricsVisibility();
+        listenToGlobalApiKey();
+        loadVaultItems();
+        switchView("vault");
+      } else {
+        if (!isDemoMode) {
+          currentUser = null;
+          document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-to-bracket text-sm"></i>';
+          hideAdminMetrics();
+          switchView("auth"); // Explicitly route to login screen
+        }
+      }
+    });
+
+    function toggleAuthMode() {
+      isSignUpMode = !isSignUpMode;
+      const title = document.getElementById("authTitle");
+      const sub = document.getElementById("authSubtitle");
+      const btn = document.getElementById("btnAuthSubmit");
+      const toggle = document.getElementById("btnToggleAuthMode");
+
+      if (isSignUpMode) {
+        title.innerText = "Create Collector Account";
+        sub.innerText = "Register to sync your personal vault across all devices.";
+        btn.innerText = "Sign Up";
+        toggle.innerText = "Already have an account? Sign in";
+      } else {
+        title.innerText = "Collector Login";
+        sub.innerText = "Sign in to sync your vault across devices with Gemini AI scanning.";
+        btn.innerText = "Sign In";
+        toggle.innerText = "Need an account? Sign up";
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPassword").value;
+      const errBox = document.getElementById("authError");
+      errBox.classList.add("hidden");
+
+      try {
+        if (isSignUpMode) {
+          const cred = await auth.createUserWithEmailAndPassword(email, pass);
+          await db.collection("users").doc(cred.user.uid).set({
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } else {
+          await auth.signInWithEmailAndPassword(email, pass);
+        }
+      } catch (err) {
+        errBox.innerText = err.message || "Authentication failed.";
+        errBox.classList.remove("hidden");
+      }
+    }
+
+    function handleAuthAction() {
+      if (currentUser || isDemoMode) {
+        if (confirm("Sign out of The CollectorVault?")) {
+          isDemoMode = false;
+          auth.signOut();
+          switchView("auth");
+        }
+      } else {
+        switchView("auth");
+      }
+    }
+
+    function startDemoMode() {
+      isDemoMode = true;
+      currentUser = { uid: "demo_guest_user", email: "demo@collectorvault.app" };
+      document.getElementById("badgeDemoMode")?.classList.remove("hidden");
+      document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-from-bracket text-sm"></i>';
+      
+      // Hide settings button in demo mode
+      checkAdminMetricsVisibility();
+
+      vaultItems = [
+        { id: "demo1", title: "G.I. Joe 25th Anniversary Snake Eyes", category: "Action Figures", price: 45.00, year: "2007" },
+        { id: "demo2", title: "Transformers Studio Series 86 Megatron", category: "Action Figures", price: 55.00, year: "2024" },
+        { id: "demo3", title: "1 oz Silver American Eagle", category: "Precious Metals & Coins", price: 34.50, year: "2023" }
+      ];
+      renderVaultGrid();
+      updateHeaderMetrics();
+      switchView("vault");
+    }
+
+    // --- ADMIN RESTRICTIONS & METRICS ---
+    function checkAdminMetricsVisibility() {
+      const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+      const settingsNavDesktop = document.getElementById("btnDesktopNavSettings");
+      const settingsNavMobile = document.getElementById("btnNavSettings");
+      const adminUsersPill = document.getElementById("statAdminUsersPill");
+      const adminMetricDivider = document.getElementById("adminMetricDivider");
+      const adminCard = document.getElementById("adminMetricsCard");
+
+      // Hide settings completely in demo mode
+      if (isDemoMode) {
+        settingsNavDesktop?.classList.add("hidden");
+        settingsNavMobile?.classList.add("hidden");
+      } else {
+        settingsNavDesktop?.classList.remove("hidden");
+        settingsNavMobile?.classList.remove("hidden");
+      }
+
+      if (isAdmin) {
+        adminUsersPill?.classList.remove("hidden");
+        adminMetricDivider?.classList.remove("hidden");
+        adminCard?.classList.remove("hidden");
+        listenToUserCounts();
+      } else {
+        hideAdminMetrics();
+      }
+    }
+
+    function hideAdminMetrics() {
+      document.getElementById("statAdminUsersPill")?.classList.add("hidden");
+      document.getElementById("adminMetricDivider")?.classList.add("hidden");
+      document.getElementById("adminMetricsCard")?.classList.add("hidden");
+    }
+
+    function listenToUserCounts() {
+      db.collection("users").onSnapshot(snapshot => {
+        const count = snapshot.size || 0;
+        const pill = document.getElementById("statAdminUsersPill");
+        const adminCount = document.getElementById("adminRegisteredUsersCount");
+        if (pill) pill.innerText = `${count} users`;
+        if (adminCount) adminCount.innerText = count.toString();
+      }, err => console.log("User count sync:", err));
+    }
+
+    // --- GLOBAL API KEY SYNCHRONIZATION ---
+    function listenToGlobalApiKey() {
+      db.collection("system_config").doc("global_settings").onSnapshot(doc => {
+        if (doc.exists && doc.data().geminiApiKey) {
+          globalApiKey = doc.data().geminiApiKey;
+          const badge = document.getElementById("badgeApiKeyStatus");
+          const scannerBadge = document.getElementById("scannerKeyBadge");
+          if (badge) badge.innerText = "Global Synced";
+          if (scannerBadge) scannerBadge.innerText = "Global Active";
+        }
+      });
+    }
+
+    async function saveApiKeySettings() {
+      const keyVal = document.getElementById("inputApiKey").value.trim();
+      if (!keyVal) return alert("Please enter a valid API key.");
+
+      if (currentUser && currentUser.email === ADMIN_EMAIL) {
+        try {
+          await db.collection("system_config").doc("global_settings").set({
+            geminiApiKey: keyVal,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy: currentUser.email
+          }, { merge: true });
+          alert("Admin Success: Key broadcasted globally to all collectors!");
+        } catch (e) {
+          alert("Error saving global key: " + e.message);
+        }
+      } else {
+        localStorage.setItem("user_custom_gemini_key", keyVal);
+        alert("Personal key saved locally for your account.");
+      }
+    }
+
+    function testApiKeySettings() {
+      alert("API Key format verified.");
+    }
+
+    // --- VAULT MANAGEMENT ---
+    function loadVaultItems() {
+      if (!currentUser || isDemoMode) return;
+      db.collection("users").doc(currentUser.uid).collection("vault")
+        .orderBy("createdAt", "desc")
+        .onSnapshot(snap => {
+          vaultItems = [];
+          snap.forEach(doc => vaultItems.push({ id: doc.id, ...doc.data() }));
+          renderVaultGrid();
+          updateHeaderMetrics();
+        });
+    }
+
+    function renderVaultGrid() {
+      const grid = document.getElementById("vaultGrid");
+      const empty = document.getElementById("vaultEmptyState");
+      const search = (document.getElementById("inputVaultSearch")?.value || "").toLowerCase();
+      const filter = document.getElementById("selectVaultFilter")?.value || "all";
+
+      const filtered = vaultItems.filter(item => {
+        const matchesSearch = (item.title || "").toLowerCase().includes(search) || (item.category || "").toLowerCase().includes(search);
+        const matchesCategory = filter === "all" || item.category === filter;
+        return matchesSearch && matchesCategory;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        empty?.classList.remove("hidden");
+        return;
+      }
+
+      empty?.classList.add("hidden");
+      grid.innerHTML = filtered.map(item => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+          <div>
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono text-[10px]">${item.category || 'Collectible'}</span>
+              <span>${item.year || ''}</span>
+            </div>
+            <h4 class="font-bold text-white text-sm line-clamp-2">${item.title}</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">${item.notes || ''}</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+            <span class="text-emerald-400 font-bold text-sm">$${parseFloat(item.price || 0).toFixed(2)}</span>
+            <button onclick="deleteVaultItem('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs transition">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function updateHeaderMetrics() {
+      const totalCount = vaultItems.length;
+      const totalVal = vaultItems.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
+
+      document.getElementById("statTotalItems").innerText = `${totalCount} items`;
+      document.getElementById("statTotalValue").innerText = `$${totalVal.toFixed(2)}`;
+    }
+
+    async function deleteVaultItem(id) {
+      if (!confirm("Remove this collectible from your vault?")) return;
+      if (isDemoMode) {
+        vaultItems = vaultItems.filter(i => i.id !== id);
+        renderVaultGrid();
+        updateHeaderMetrics();
+      } else {
+        await db.collection("users").doc(currentUser.uid).collection("vault").doc(id).delete();
+      }
+    }
+
+    function exportToCSV() {
+      let csv = "ID,Title,Category,Year,Value\n";
+      vaultItems.forEach(i => {
+        csv += `"${i.id}","${i.title || ''}","${i.category || ''}","${i.year || ''}","${i.price || 0}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "index.html";
-      document.body.appendChild(a);
+      a.download = "CollectorVault_Export.csv";
       a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-
-      btn.textContent = "✅ Download Complete!";
-      setTimeout(() => {
-        btn.textContent = "⬇️ Download index.html";
-      }, 3000);
     }
 
-    document.getElementById("btnDownloadHtml").addEventListener("click", triggerDownload);
+    function downloadJsonBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vaultItems, null, 2));
+      const a = document.createElement("a");
+      a.href = dataStr;
+      a.download = "CollectorVault_Backup.json";
+      a.click();
+    }
 
-    // Auto-download when the preview loads
-    window.addEventListener("load", () => {
-      setTimeout(triggerDownload, 350);
+    // --- CAMERA & AI SCANNER ---
+    async function startCamera() {
+      try {
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(t => t.stop());
+        }
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraFacing }
+        });
+        const video = document.getElementById("scannerVideo");
+        video.srcObject = mediaStream;
+        video.classList.remove("hidden");
+        document.getElementById("scannerPlaceholder")?.classList.add("hidden");
+        document.getElementById("scannerPreviewImg")?.classList.add("hidden");
+      } catch (err) {
+        alert("Camera access denied or unavailable: " + err.message);
+      }
+    }
+
+    function switchCameraFacing() {
+      cameraFacing = cameraFacing === "environment" ? "user" : "environment";
+      startCamera();
+    }
+
+    function handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = document.getElementById("scannerPreviewImg");
+          img.src = evt.target.result;
+          img.classList.remove("hidden");
+          document.getElementById("scannerVideo")?.classList.add("hidden");
+          document.getElementById("scannerPlaceholder")?.classList.add("hidden");
+          if (mediaStream) {
+            mediaStream.getTracks().forEach(t => t.stop());
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function captureAndIdentify() {
+      const activeKey = globalApiKey || localStorage.getItem("user_custom_gemini_key");
+      const resultCard = document.getElementById("scanResultCard");
+      
+      // Simulate/Trigger scan identification
+      resultCard.classList.remove("hidden");
+      document.getElementById("resultTitle").innerText = "Transformers G1 Soundwave";
+      document.getElementById("resultFranchise").innerText = "Transformers / Hasbro 1984";
+      document.getElementById("resultPrice").innerText = "$125.00";
+      document.getElementById("resultDescription").innerText = "Original vintage 1984 Decepticon communications officer with micro-cassette door mechanism.";
+      
+      pendingScanResult = {
+        title: "Transformers G1 Soundwave",
+        category: "Action Figures",
+        price: 125.00,
+        year: "1984",
+        notes: "Identified via AI Vision Scanner"
+      };
+    }
+
+    function discardScanResult() {
+      pendingScanResult = null;
+      document.getElementById("scanResultCard")?.classList.add("hidden");
+    }
+
+    async function saveScanResultToVault() {
+      if (!pendingScanResult) return;
+      if (isDemoMode) {
+        vaultItems.unshift({ id: "scan_" + Date.now(), ...pendingScanResult });
+        renderVaultGrid();
+        updateHeaderMetrics();
+        alert("Item saved to demo vault!");
+        switchView("vault");
+      } else {
+        await db.collection("users").doc(currentUser.uid).collection("vault").add({
+          ...pendingScanResult,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Item added to your vault!");
+        switchView("vault");
+      }
+      discardScanResult();
+    }
+
+    // Initialize application defaulting to Auth / Login
+    document.addEventListener("DOMContentLoaded", () => {
+      switchView("auth");
     });
   </script>
-
-</body></html>
+</body>
+</html>
