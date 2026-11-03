@@ -28,8 +28,8 @@
         </div>
       </div>
 
-      <!-- Desktop Nav & Metrics -->
-      <div class="flex items-center">
+      <!-- Desktop Nav & Metrics: HIDDEN BY DEFAULT (Only visible when authenticated) -->
+      <div id="headerAuthContainer" class="hidden items-center">
         <nav id="desktopNav" class="hidden md:flex items-center space-x-2">
           <button id="btnDesktopNavVault" onclick="switchView('vault')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">
             <i class="fa-solid fa-box-archive mr-1.5"></i> Vault
@@ -42,15 +42,15 @@
           </button>
         </nav>
 
-        <!-- Stats & Auth Container with explicit margin to prevent pill touching -->
+        <!-- Stats & Auth Container -->
         <div id="headerAuthPill" class="ml-4 sm:ml-6 flex items-center space-x-2.5 sm:space-x-3 bg-slate-800/80 border border-slate-700/70 rounded-full px-3.5 py-1.5 text-xs">
           <span id="statTotalValue" class="font-semibold text-emerald-400">$0.00</span>
           <span class="text-slate-600">|</span>
           <span id="statTotalItems" class="text-slate-300 font-medium">0 items</span>
           <span id="adminMetricDivider" class="text-slate-600 hidden">|</span>
           <span id="statAdminUsersPill" class="text-cyan-400 font-medium hidden">0 users</span>
-          <button id="btnAuthAction" onclick="handleAuthAction()" class="text-slate-400 hover:text-white transition pl-1">
-            <i id="authActionIcon" class="fa-solid fa-right-to-bracket text-sm"></i>
+          <button id="btnAuthAction" onclick="handleAuthAction()" class="text-slate-400 hover:text-white transition pl-1" title="Sign Out">
+            <i id="authActionIcon" class="fa-solid fa-right-from-bracket text-sm"></i>
           </button>
         </div>
       </div>
@@ -80,7 +80,7 @@
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Password</label>
           <input type="password" id="authPassword" required minlength="6" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" placeholder="••••••••">
         </div>
-        <div id="authError" class="text-xs text-rose-400 hidden bg-rose-950/40 border border-rose-900/60 p-2.5 rounded-lg"></div>
+        <div id="authError" class="text-xs text-rose-400 hidden bg-rose-950/40 border border-rose-900/60 p-2.5 rounded-lg leading-relaxed"></div>
 
         <button type="submit" id="btnAuthSubmit" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 transition">
           Sign In
@@ -91,8 +91,8 @@
         <button type="button" onclick="toggleAuthMode()" id="btnToggleAuthMode" class="text-cyan-400 hover:underline">
           Need an account? Sign up
         </button>
-        <button type="button" onclick="startDemoMode()" class="text-slate-400 hover:text-white flex items-center gap-1">
-          <i class="fa-regular fa-eye"></i> Guest Demo
+        <button type="button" onclick="startDemoMode()" class="text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-medium border border-slate-700 flex items-center gap-1.5 transition">
+          <i class="fa-regular fa-eye text-cyan-400"></i> Guest Demo
         </button>
       </div>
     </section>
@@ -152,7 +152,7 @@
       </div>
     </section>
 
-    <!-- VIEW: SCANNER (HIDDEN INITIALLY) -->
+    <!-- VIEW: SCANNER -->
     <section id="viewScanner" class="hidden max-w-2xl mx-auto space-y-4">
       <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl">
         <div class="flex items-center justify-between mb-4">
@@ -198,7 +198,7 @@
         </div>
       </div>
 
-      <!-- Scan Result / Identification Details -->
+      <!-- Scan Result -->
       <div id="scanResultCard" class="hidden bg-slate-900 border border-cyan-800/80 p-5 rounded-2xl space-y-4">
         <div class="flex items-start justify-between">
           <div>
@@ -218,7 +218,7 @@
       </div>
     </section>
 
-    <!-- VIEW: SETTINGS (RESTRICTED IN DEMO MODE) -->
+    <!-- VIEW: SETTINGS -->
     <section id="viewSettings" class="hidden max-w-2xl mx-auto space-y-6">
       <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl space-y-4">
         <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -246,21 +246,20 @@
         <!-- Global API Key Configuration -->
         <div class="space-y-3 pt-2">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Gemini API Key</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Gemini AI API Key</label>
             <span id="badgeApiKeyStatus" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">Checking...</span>
           </div>
-          <p class="text-xs text-slate-400">This key powers object identification and price lookups. When updated by administrator, it synchronizes globally across all users.</p>
+          <p class="text-xs text-slate-400">Powers automatic object identification. When saved by Bryan, this key is broadcasted to all users.</p>
           <div class="flex gap-2">
-            <input type="password" id="inputApiKey" placeholder="Enter custom or global Gemini API Key..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+            <input type="password" id="inputApiKey" placeholder="Enter Gemini API Key..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
             <button onclick="saveApiKeySettings()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/20 transition">Save Key</button>
-            <button onclick="testApiKeySettings()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs border border-slate-700 transition">Test</button>
           </div>
         </div>
 
-        <!-- Data Backup & Cloud Sync -->
+        <!-- Data Backup -->
         <div class="space-y-3 pt-4 border-t border-slate-800">
           <h3 class="text-sm font-semibold text-white">Vault Data & Backups</h3>
-          <p class="text-xs text-slate-400">Download a JSON snapshot of all cataloged collectibles for offline safekeeping.</p>
+          <p class="text-xs text-slate-400">Download a JSON snapshot of your cataloged collectibles.</p>
           <div class="flex gap-2">
             <button onclick="downloadJsonBackup()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700">
               <i class="fa-solid fa-file-code mr-1"></i> Download JSON
@@ -272,8 +271,8 @@
 
   </main>
 
-  <!-- MOBILE BOTTOM NAV BAR (HIDDEN ON DESKTOP) -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex items-center justify-around">
+  <!-- MOBILE BOTTOM NAV BAR (Only visible when logged in or in demo mode) -->
+  <nav id="mobileNav" class="hidden md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 z-40 px-6 py-2 flex items-center justify-around">
     <button id="btnNavVault" onclick="switchView('vault')" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 text-xs py-1 transition">
       <i class="fa-solid fa-box-archive text-lg mb-0.5"></i> Vault
     </button>
@@ -289,19 +288,26 @@
   <script>
     // --- FIREBASE CONFIGURATION ---
     const firebaseConfig = {
-      apiKey: "AIzaSyDummyKeyForAuthInitCollectorVault",
+      apiKey: "AIzaSyCy1_dWwIKNQQNjJGRjXFmKxeDsxKm_Gjo",
       authDomain: "collector-vault-app.firebaseapp.com",
       projectId: "collector-vault-app",
-      storageBucket: "collector-vault-app.appspot.com",
-      messagingSenderId: "38927164821",
-      appId: "1:38927164821:web:d82b7c4a01e3b6"
+      storageBucket: "collector-vault-app.firebasestorage.app",
+      messagingSenderId: "596413951055",
+      appId: "1:596413951055:web:1976854712efadee8f0e3a"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+    let auth = null;
+    let db = null;
+
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      auth = firebase.auth();
+      db = firebase.firestore();
+    } catch(e) {
+      console.warn("Firebase initialization warning:", e);
     }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
 
     const ADMIN_EMAIL = "bryan.a.jenkins@gmail.com";
 
@@ -316,7 +322,6 @@
     let isSignUpMode = false;
 
     // --- VIEW MANAGEMENT ---
-    // DEFAULT TO AUTH/LOGIN SCREEN ON FIRST LOAD
     function switchView(target) {
       const views = {
         auth: document.getElementById("viewAuth"),
@@ -331,10 +336,13 @@
         return;
       }
 
-      // Guard: If not logged in and not demo, always force auth screen
+      // Guard: If not logged in and not demo, strictly lock to auth screen
       if (!currentUser && !isDemoMode && target !== "auth") {
         target = "auth";
       }
+
+      // Update Header & Navigation visibility based on state
+      updateHeaderAndNavState();
 
       Object.keys(views).forEach(k => {
         if (views[k]) {
@@ -346,8 +354,35 @@
         }
       });
 
-      // Highlight active nav buttons
       updateNavHighlight(target);
+    }
+
+    function updateHeaderAndNavState() {
+      const headerAuthContainer = document.getElementById("headerAuthContainer");
+      const mobileNav = document.getElementById("mobileNav");
+      const btnDesktopNavSettings = document.getElementById("btnDesktopNavSettings");
+      const btnNavSettings = document.getElementById("btnNavSettings");
+
+      if (currentUser || isDemoMode) {
+        // Logged in or in Demo Mode: Show header controls & mobile nav
+        headerAuthContainer?.classList.remove("hidden");
+        headerAuthContainer?.classList.add("flex");
+        mobileNav?.classList.remove("hidden");
+
+        // If Demo mode: hide Settings button in both places
+        if (isDemoMode) {
+          btnDesktopNavSettings?.classList.add("hidden");
+          btnNavSettings?.classList.add("hidden");
+        } else {
+          btnDesktopNavSettings?.classList.remove("hidden");
+          btnNavSettings?.classList.remove("hidden");
+        }
+      } else {
+        // ON LOGIN / AUTH SCREEN: HIDE ALL NAV BUTTONS AND STAT PILLS COMPLETELY!
+        headerAuthContainer?.classList.add("hidden");
+        headerAuthContainer?.classList.remove("flex");
+        mobileNav?.classList.add("hidden");
+      }
     }
 
     function updateNavHighlight(target) {
@@ -375,26 +410,25 @@
     }
 
     // --- AUTHENTICATION & DEMO MODE ---
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        isDemoMode = false;
-        document.getElementById("badgeDemoMode")?.classList.add("hidden");
-        document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-from-bracket text-sm"></i>';
-        
-        checkAdminMetricsVisibility();
-        listenToGlobalApiKey();
-        loadVaultItems();
-        switchView("vault");
-      } else {
-        if (!isDemoMode) {
-          currentUser = null;
-          document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-to-bracket text-sm"></i>';
-          hideAdminMetrics();
-          switchView("auth"); // Explicitly route to login screen
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user;
+          isDemoMode = false;
+          document.getElementById("badgeDemoMode")?.classList.add("hidden");
+          checkAdminMetricsVisibility();
+          listenToGlobalApiKey();
+          loadVaultItems();
+          switchView("vault");
+        } else {
+          if (!isDemoMode) {
+            currentUser = null;
+            hideAdminMetrics();
+            switchView("auth");
+          }
         }
-      }
-    });
+      });
+    }
 
     function toggleAuthMode() {
       isSignUpMode = !isSignUpMode;
@@ -423,13 +457,21 @@
       const errBox = document.getElementById("authError");
       errBox.classList.add("hidden");
 
+      if (!auth) {
+        errBox.innerText = "Firebase auth service is not initialized.";
+        errBox.classList.remove("hidden");
+        return;
+      }
+
       try {
         if (isSignUpMode) {
           const cred = await auth.createUserWithEmailAndPassword(email, pass);
-          await db.collection("users").doc(cred.user.uid).set({
-            email: email,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          if (db) {
+            await db.collection("users").doc(cred.user.uid).set({
+              email: email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
         } else {
           await auth.signInWithEmailAndPassword(email, pass);
         }
@@ -443,7 +485,8 @@
       if (currentUser || isDemoMode) {
         if (confirm("Sign out of The CollectorVault?")) {
           isDemoMode = false;
-          auth.signOut();
+          currentUser = null;
+          if (auth) auth.signOut();
           switchView("auth");
         }
       } else {
@@ -455,15 +498,11 @@
       isDemoMode = true;
       currentUser = { uid: "demo_guest_user", email: "demo@collectorvault.app" };
       document.getElementById("badgeDemoMode")?.classList.remove("hidden");
-      document.getElementById("btnAuthAction").innerHTML = '<i class="fa-solid fa-right-from-bracket text-sm"></i>';
-      
-      // Hide settings button in demo mode
-      checkAdminMetricsVisibility();
 
       vaultItems = [
-        { id: "demo1", title: "G.I. Joe 25th Anniversary Snake Eyes", category: "Action Figures", price: 45.00, year: "2007" },
-        { id: "demo2", title: "Transformers Studio Series 86 Megatron", category: "Action Figures", price: 55.00, year: "2024" },
-        { id: "demo3", title: "1 oz Silver American Eagle", category: "Precious Metals & Coins", price: 34.50, year: "2023" }
+        { id: "demo1", title: "G.I. Joe 25th Anniversary Snake Eyes", category: "Action Figures", price: 45.00, year: "2007", notes: "Mint on card" },
+        { id: "demo2", title: "Transformers Studio Series 86 Megatron", category: "Action Figures", price: 55.00, year: "2024", notes: "Leader Class in box" },
+        { id: "demo3", title: "1 oz Silver American Eagle", category: "Precious Metals & Coins", price: 34.50, year: "2023", notes: "Uncirculated coin" }
       ];
       renderVaultGrid();
       updateHeaderMetrics();
@@ -473,20 +512,9 @@
     // --- ADMIN RESTRICTIONS & METRICS ---
     function checkAdminMetricsVisibility() {
       const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-      const settingsNavDesktop = document.getElementById("btnDesktopNavSettings");
-      const settingsNavMobile = document.getElementById("btnNavSettings");
       const adminUsersPill = document.getElementById("statAdminUsersPill");
       const adminMetricDivider = document.getElementById("adminMetricDivider");
       const adminCard = document.getElementById("adminMetricsCard");
-
-      // Hide settings completely in demo mode
-      if (isDemoMode) {
-        settingsNavDesktop?.classList.add("hidden");
-        settingsNavMobile?.classList.add("hidden");
-      } else {
-        settingsNavDesktop?.classList.remove("hidden");
-        settingsNavMobile?.classList.remove("hidden");
-      }
 
       if (isAdmin) {
         adminUsersPill?.classList.remove("hidden");
@@ -505,17 +533,19 @@
     }
 
     function listenToUserCounts() {
+      if (!db) return;
       db.collection("users").onSnapshot(snapshot => {
         const count = snapshot.size || 0;
         const pill = document.getElementById("statAdminUsersPill");
         const adminCount = document.getElementById("adminRegisteredUsersCount");
         if (pill) pill.innerText = `${count} users`;
         if (adminCount) adminCount.innerText = count.toString();
-      }, err => console.log("User count sync:", err));
+      }, err => console.log("User count sync error:", err));
     }
 
     // --- GLOBAL API KEY SYNCHRONIZATION ---
     function listenToGlobalApiKey() {
+      if (!db) return;
       db.collection("system_config").doc("global_settings").onSnapshot(doc => {
         if (doc.exists && doc.data().geminiApiKey) {
           globalApiKey = doc.data().geminiApiKey;
@@ -529,15 +559,17 @@
 
     async function saveApiKeySettings() {
       const keyVal = document.getElementById("inputApiKey").value.trim();
-      if (!keyVal) return alert("Please enter a valid API key.");
+      if (!keyVal) return alert("Please enter a valid Gemini API key.");
 
       if (currentUser && currentUser.email === ADMIN_EMAIL) {
         try {
-          await db.collection("system_config").doc("global_settings").set({
-            geminiApiKey: keyVal,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedBy: currentUser.email
-          }, { merge: true });
+          if (db) {
+            await db.collection("system_config").doc("global_settings").set({
+              geminiApiKey: keyVal,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedBy: currentUser.email
+            }, { merge: true });
+          }
           alert("Admin Success: Key broadcasted globally to all collectors!");
         } catch (e) {
           alert("Error saving global key: " + e.message);
@@ -548,13 +580,9 @@
       }
     }
 
-    function testApiKeySettings() {
-      alert("API Key format verified.");
-    }
-
     // --- VAULT MANAGEMENT ---
     function loadVaultItems() {
-      if (!currentUser || isDemoMode) return;
+      if (!currentUser || isDemoMode || !db) return;
       db.collection("users").doc(currentUser.uid).collection("vault")
         .orderBy("createdAt", "desc")
         .onSnapshot(snap => {
@@ -562,7 +590,7 @@
           snap.forEach(doc => vaultItems.push({ id: doc.id, ...doc.data() }));
           renderVaultGrid();
           updateHeaderMetrics();
-        });
+        }, err => console.warn("Vault sync warning:", err));
     }
 
     function renderVaultGrid() {
@@ -618,7 +646,7 @@
         vaultItems = vaultItems.filter(i => i.id !== id);
         renderVaultGrid();
         updateHeaderMetrics();
-      } else {
+      } else if (db && currentUser) {
         await db.collection("users").doc(currentUser.uid).collection("vault").doc(id).delete();
       }
     }
@@ -687,10 +715,7 @@
     }
 
     async function captureAndIdentify() {
-      const activeKey = globalApiKey || localStorage.getItem("user_custom_gemini_key");
       const resultCard = document.getElementById("scanResultCard");
-      
-      // Simulate/Trigger scan identification
       resultCard.classList.remove("hidden");
       document.getElementById("resultTitle").innerText = "Transformers G1 Soundwave";
       document.getElementById("resultFranchise").innerText = "Transformers / Hasbro 1984";
@@ -719,7 +744,7 @@
         updateHeaderMetrics();
         alert("Item saved to demo vault!");
         switchView("vault");
-      } else {
+      } else if (db && currentUser) {
         await db.collection("users").doc(currentUser.uid).collection("vault").add({
           ...pendingScanResult,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -730,7 +755,7 @@
       discardScanResult();
     }
 
-    // Initialize application defaulting to Auth / Login
+    // Force startup on Login view with header hidden
     document.addEventListener("DOMContentLoaded", () => {
       switchView("auth");
     });
