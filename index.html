@@ -119,7 +119,7 @@
         </div>
         <div class="leading-tight">
           <div class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent flex items-center gap-1.5">
-            CollectorVault
+            TheCollectorVault
             <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 tracking-wider hidden sm:inline-block">AI v2.5</span>
           </div>
           <div class="text-[10px] sm:text-xs text-slate-400 font-medium">Smart Catalog & Appraisal Engine</div>
@@ -163,7 +163,7 @@
               <i data-lucide="shield" class="w-8 h-8 text-cyan-400"></i>
             </div>
           </div>
-          <h1 class="text-2xl font-black tracking-tight text-white">CollectorVault</h1>
+          <h1 class="text-2xl font-black tracking-tight text-white">TheCollectorVault</h1>
           <p class="text-slate-400 text-sm mt-1">Universal AI Appraisal & Inventory System</p>
         </div>
 
@@ -519,7 +519,7 @@
   <!-- ========================================== -->
   <!-- BOTTOM NAVIGATION BAR (Mobile & Tablet) -->
   <!-- ========================================== -->
-  <nav id="bottomNav" class="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 py-1.5 px-4 md:hidden flex justify-around items-center">
+  <nav id="bottomNav" class="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 py-1.5 px-4 md:hidden hidden justify-around items-center">
     <button id="navTabVault" class="flex flex-col items-center gap-1 text-cyan-400 py-1 px-3">
       <i data-lucide="boxes" class="w-5 h-5"></i>
       <span class="text-[10px] font-bold tracking-tight">Vault</span>
@@ -825,6 +825,11 @@
       // VIEW SWITCHER & GLOBAL TOAST NOTIFICATIONS
       // ----------------------------------------------------
       function switchView(targetView) {
+        // Guard protected views if user is not authenticated
+        if (targetView !== "auth" && !currentUser) {
+          targetView = "auth";
+        }
+
         const views = {
           auth: document.getElementById("viewAuth"),
           vault: document.getElementById("viewVault"),
@@ -838,6 +843,18 @@
 
         if (views[targetView]) {
           views[targetView].classList.remove("hidden");
+        }
+
+        // Control bottom nav visibility on mobile: hidden on auth, visible once authenticated
+        const bottomNav = document.getElementById("bottomNav");
+        if (bottomNav) {
+          if (targetView === "auth" || !currentUser) {
+            bottomNav.classList.add("hidden");
+            bottomNav.classList.remove("flex");
+          } else {
+            bottomNav.classList.remove("hidden");
+            bottomNav.classList.add("flex");
+          }
         }
 
         if (targetView === "scanner") {
@@ -2319,11 +2336,35 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
           if (currentUser) switchView("vault");
         });
 
-        document.getElementById("btnHeaderSettings")?.addEventListener("click", () => switchView("settings"));
+        document.getElementById("btnHeaderSettings")?.addEventListener("click", () => {
+          if (!currentUser) {
+            switchView("auth");
+            return;
+          }
+          switchView("settings");
+        });
 
-        document.getElementById("navTabVault")?.addEventListener("click", () => switchView("vault"));
-        document.getElementById("navTabScan")?.addEventListener("click", () => switchView("scanner"));
-        document.getElementById("navTabSettings")?.addEventListener("click", () => switchView("settings"));
+        document.getElementById("navTabVault")?.addEventListener("click", () => {
+          if (!currentUser) {
+            switchView("auth");
+            return;
+          }
+          switchView("vault");
+        });
+        document.getElementById("navTabScan")?.addEventListener("click", () => {
+          if (!currentUser) {
+            switchView("auth");
+            return;
+          }
+          switchView("scanner");
+        });
+        document.getElementById("navTabSettings")?.addEventListener("click", () => {
+          if (!currentUser) {
+            switchView("auth");
+            return;
+          }
+          switchView("settings");
+        });
 
         document.getElementById("btnBackToVaultFromSettings")?.addEventListener("click", () => switchView("vault"));
 
