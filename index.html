@@ -689,20 +689,20 @@
   <!-- ========================================== -->
   <!-- MODAL: FULLSCREEN PHOTO LIGHTBOX / INSPECTOR -->
   <!-- ========================================== -->
-  <div id="modalPhotoLightbox" class="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-xl flex flex-col p-3 sm:p-6 hidden">
+  <div id="modalPhotoLightbox" class="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-xl flex flex-col p-3 sm:p-6 hidden touch-none">
     <div class="flex items-center justify-between pb-3 shrink-0">
       <div class="flex items-center gap-2 text-slate-300 text-xs">
         <i data-lucide="zoom-in" class="w-4 h-4 text-cyan-400"></i>
         <span class="font-bold">Collectible Photo Inspector</span>
         <span class="text-slate-500">|</span>
-        <span class="text-slate-400">Pinch or scroll to examine markings and wear</span>
+        <span class="text-slate-400">Pinch or scroll to zoom, drag to pan</span>
       </div>
       <button id="btnCloseLightbox" class="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
-    <div class="flex-1 w-full h-full flex items-center justify-center overflow-auto p-2">
-      <img id="lightboxImage" src="" alt="Zoomed Inspection" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl transition-all duration-200">
+    <div id="lightboxContainer" class="flex-1 w-full h-full flex items-center justify-center overflow-hidden p-2 relative select-none touch-none">
+      <img id="lightboxImage" src="" alt="Zoomed Inspection" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform duration-75 cursor-grab active:cursor-grabbing will-change-transform">
     </div>
   </div>
 
@@ -1507,6 +1507,13 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
           if (editingItemId) {
             exactMatches = exactMatches.filter(m => m.id !== editingItemId);
             potentialMatches = potentialMatches.filter(m => m.id !== editingItemId);
+
+            // On mobile devices, suppress the duplicate alert and list when editing
+            const isMobileScreen = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobileScreen) {
+              dupWarning.classList.add("hidden");
+              return;
+            }
           }
 
           if (exactMatches.length > 0) {
@@ -1592,10 +1599,11 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
           const estValue = parseFloat(document.getElementById("inputReviewEstValue")?.value) || 0.00;
           const notes = document.getElementById("inputReviewNotes")?.value.trim() || "";
 
+          // High-definition compression: 1280px max dimension & 0.82 quality (crisp zoom while staying under Firestore's 1MB cap)
           let finalThumbnail = currentCapturedBase64;
           if (currentCapturedBase64 && currentCapturedBase64.startsWith("data:image")) {
             try {
-              finalThumbnail = await compressImageForStorage(currentCapturedBase64, 500, 0.6);
+              finalThumbnail = await compressImageForStorage(currentCapturedBase64, 1280, 0.82);
             } catch (e) {
               console.warn("Storage compression warning:", e);
             }
@@ -2483,23 +2491,152 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
           saveReviewedItem();
         });
 
-        // Photo Zoom & Lightbox Controls
+        // Photo Zoom & Lightbox Controls with Mobile Touch Gestures (Pinch & Pan)
+        let zoomScale = 1;
+        let panX = 0;
+        let panY = 0;
+        let initialDistance = 0;
+        let startScale = 1;
+        let isDragging = false;
+        let startTouchX = 0;
+        let startTouchY = 0;
+        let lastTapTime = 0;
+
+        function updateLightboxTransform() {
+          const lightboxImg = document.getElementById("lightboxImage");
+          if (lightboxImg) {
+            lightboxImg.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoomScale})`;
+          }
+        }
+
+        function resetLightboxZoom() {
+          zoomScale = 1;
+          panX = 0;
+          panY = 0;
+          updateLightboxTransform();
+        }
+
         const openLightbox = () => {
           const src = document.getElementById("reviewPhotoPreview")?.src;
           const lightboxImg = document.getElementById("lightboxImage");
           const lightboxModal = document.getElementById("modalPhotoLightbox");
           if (src && lightboxImg && lightboxModal) {
             lightboxImg.src = src;
+            resetLightboxZoom();
             lightboxModal.classList.remove("hidden");
             if (window.lucide) lucide.createIcons();
           }
         };
 
+        const closeLightbox = () => {
+          document.getElementById("modalPhotoLightbox")?.classList.add("hidden");
+          resetLightboxZoom();
+        };
+
         document.getElementById("reviewPhotoPreview")?.addEventListener("click", openLightbox);
         document.getElementById("btnZoomReviewPhoto")?.addEventListener("click", openLightbox);
-        document.getElementById("btnCloseLightbox")?.addEventListener("click", () => {
-          document.getElementById("modalPhotoLightbox")?.classList.add("hidden");
-        });
+        document.getElementById("btnCloseLightbox")?.addEventListener("click", closeLightbox);
+
+        const lightboxContainer = document.getElementById("lightboxContainer");
+        const lightboxImg = document.getElementById("lightboxImage");
+
+        if (lightboxContainer && lightboxImg) {
+          // Touch gestures: Pinch-to-zoom and Drag-to-pan
+          lightboxContainer.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 2) {
+              // Two-finger pinch start
+              isDragging = false;
+              initialDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+              );
+              startScale = zoomScale;
+            } else if (e.touches.length === 1) {
+              // Single-finger drag start or double-tap detection
+              const now = Date.now();
+              if (now - lastTapTime < 300) {
+                // Double-tap to toggle zoom (1x <-> 2.5x)
+                zoomScale = zoomScale > 1.2 ? 1 : 2.5;
+                panX = 0;
+                panY = 0;
+                updateLightboxTransform();
+                lastTapTime = 0;
+                return;
+              }
+              lastTapTime = now;
+
+              isDragging = true;
+              startTouchX = e.touches[0].clientX - panX;
+              startTouchY = e.touches[0].clientY - panY;
+            }
+          }, { passive: true });
+
+          lightboxContainer.addEventListener("touchmove", (e) => {
+            if (e.touches.length === 2 && initialDistance > 0) {
+              e.preventDefault();
+              const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+              );
+              const factor = dist / initialDistance;
+              zoomScale = Math.min(Math.max(1, startScale * factor), 4.5);
+              updateLightboxTransform();
+            } else if (e.touches.length === 1 && isDragging && zoomScale > 1) {
+              e.preventDefault();
+              panX = e.touches[0].clientX - startTouchX;
+              panY = e.touches[0].clientY - startTouchY;
+              updateLightboxTransform();
+            }
+          }, { passive: false });
+
+          lightboxContainer.addEventListener("touchend", () => {
+            isDragging = false;
+            initialDistance = 0;
+            if (zoomScale <= 1) {
+              panX = 0;
+              panY = 0;
+              zoomScale = 1;
+              updateLightboxTransform();
+            }
+          });
+
+          // Mouse wheel zoom support for desktop
+          lightboxContainer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 0.2 : -0.2;
+            zoomScale = Math.min(Math.max(1, zoomScale + delta), 4.5);
+            if (zoomScale === 1) {
+              panX = 0;
+              panY = 0;
+            }
+            updateLightboxTransform();
+          }, { passive: false });
+
+          // Mouse drag panning for desktop
+          let mouseDragging = false;
+          let mouseStartX = 0;
+          let mouseStartY = 0;
+
+          lightboxContainer.addEventListener("mousedown", (e) => {
+            if (zoomScale > 1) {
+              mouseDragging = true;
+              mouseStartX = e.clientX - panX;
+              mouseStartY = e.clientY - panY;
+            }
+          });
+
+          window.addEventListener("mousemove", (e) => {
+            if (mouseDragging && zoomScale > 1) {
+              panX = e.clientX - mouseStartX;
+              panY = e.clientY - mouseStartY;
+              updateLightboxTransform();
+            }
+          });
+
+          window.addEventListener("mouseup", () => {
+            mouseDragging = false;
+          });
+        }
 
         // Contrast / Hallmark Enhancer Toggle
         let contrastBoosted = false;
