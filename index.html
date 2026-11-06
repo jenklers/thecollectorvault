@@ -906,23 +906,15 @@
       // ----------------------------------------------------
       // 6. GEMINI MASTER KEY STORAGE & CROSS-DEVICE SYNC
       // ----------------------------------------------------
-      const DEFAULT_EMBEDDED_GEMINI_KEY = "AQ.Ab8RN6I2JLj-abyGrNLeFWAlfCf4E--3DR0JnUAZuT_Z6l_v0w";
+      const DEFAULT_EMBEDDED_GEMINI_KEY = "";
 
       async function getActiveGeminiKey() {
-        // Priority 1: Cloud Synced Admin Configuration in Firestore
-        try {
-          const cfgDoc = await fbDb.collection("app_config").doc("gemini").get();
-          if (cfgDoc.exists && cfgDoc.data()?.apiKey) {
-            const cloudKey = cfgDoc.data().apiKey.trim();
-            localStorage.setItem("collectorVault_geminiKey", cloudKey);
-            return cloudKey;
-          }
-        } catch (e) {
-          // Cloud query restricted or offline
-        }
+        // Priority 1: Check localStorage first
+        const localKey = localStorage.getItem("collectorVault_geminiKey");
+        if (localKey && localKey.trim()) return localKey.trim();
 
         // Priority 2: User profile document
-        if (currentUser) {
+        if (currentUser && !currentUser.isLocal && fbDb) {
           try {
             const userDoc = await fbDb.collection("users").doc(currentUser.uid).get();
             if (userDoc.exists && userDoc.data()?.masterApiKey) {
@@ -933,27 +925,37 @@
           } catch (e) {}
         }
 
-        // Priority 3: Local storage
-        const localKey = localStorage.getItem("collectorVault_geminiKey");
-        if (localKey && localKey.trim()) return localKey.trim();
+        // Priority 3: Cloud Synced Admin Configuration in Firestore
+        if (fbDb) {
+          try {
+            const cfgDoc = await fbDb.collection("app_config").doc("gemini").get();
+            if (cfgDoc.exists && cfgDoc.data()?.apiKey) {
+              const cloudKey = cfgDoc.data().apiKey.trim();
+              localStorage.setItem("collectorVault_geminiKey", cloudKey);
+              return cloudKey;
+            }
+          } catch (e) {}
+        }
 
-        // Priority 4: Default embedded key
-        return DEFAULT_EMBEDDED_GEMINI_KEY;
+        return "";
       }
 
-      async function verifyGeminiKeyStatus() {
+      async function verifyGeminiKeyStatus(explicitKey = null) {
         const statusDot = document.getElementById("geminiStatusDot");
         const statusText = document.getElementById("geminiStatusText");
         if (!statusDot || !statusText) return;
 
-        let key = "";
-        try {
-          key = await getActiveGeminiKey();
-        } catch (_) {}
+        let key = explicitKey;
+        if (!key) {
+          try {
+            key = await getActiveGeminiKey();
+          } catch (_) {}
+        }
+        key = (key || "").trim();
 
         if (!key) {
-          statusDot.className = "w-2 h-2 rounded-full bg-amber-400";
-          statusText.className = "text-xs font-semibold text-amber-400";
+          statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
+          statusText.className = "text-xs font-semibold text-slate-400";
           statusText.textContent = "No Key Configured";
           return;
         }
@@ -963,37 +965,41 @@
         statusText.textContent = "Verifying...";
 
         try {
-          // Test with header auth first (required for AQ keys), with query fallback
-          let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash`, {
+          // Attempt 1: Header auth against models listing (supports both AIza and AQ keys)
+          let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1`, {
             method: "GET",
-            headers: { "x-goog-api-key": key }
+            headers: {
+              "x-goog-api-key": key
+            }
           });
 
-          if (!res.ok) {
-            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash?key=${encodeURIComponent(key)}`);
+          // Attempt 2: Query param fallback
+          if (!res.ok && (res.status === 400 || res.status === 401)) {
+            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${encodeURIComponent(key)}`);
           }
 
           if (res.ok) {
             statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
             statusText.className = "text-xs font-semibold text-emerald-400";
             statusText.textContent = "Valid & Active";
+          } else if (res.status === 401) {
+            statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
+            statusText.className = "text-xs font-semibold text-rose-400";
+            statusText.textContent = "Key Revoked / 401";
+            showNotification("Gemini API key returned 401 Unauthorized. If this key was committed to GitHub, generate a new one in Google AI Studio and paste it in Settings.", "error");
           } else if (res.status === 429) {
             statusDot.className = "w-2 h-2 rounded-full bg-amber-400";
             statusText.className = "text-xs font-semibold text-amber-400";
             statusText.textContent = "Rate Limited (429)";
-          } else if (res.status === 503) {
-            statusDot.className = "w-2 h-2 rounded-full bg-amber-400";
-            statusText.className = "text-xs font-semibold text-amber-400";
-            statusText.textContent = "High Demand (503)";
           } else {
             statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
             statusText.className = "text-xs font-semibold text-rose-400";
-            statusText.textContent = `Status ${res.status}`;
+            statusText.textContent = `Error ${res.status}`;
           }
         } catch (e) {
           statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
           statusText.className = "text-xs font-semibold text-slate-400";
-          statusText.textContent = "Network Unreachable";
+          statusText.textContent = "Network Error";
         }
       }
 
