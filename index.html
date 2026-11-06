@@ -120,7 +120,6 @@
         <div class="leading-tight">
           <div class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent flex items-center gap-1.5">
             TheCollectorVault
-            <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 tracking-wider hidden sm:inline-block">AI v2.5</span>
           </div>
           <div class="text-[10px] sm:text-xs text-slate-400 font-medium">Smart Catalog & Appraisal Engine</div>
         </div>
@@ -2202,7 +2201,45 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
           if (inputKey) inputKey.value = k;
         });
 
+        // Ensure user is indexed in Firestore users collection & update diagnostics
+        recordUserRegistration(userObj);
+        loadAdminDiagnostics();
+
         switchView("vault");
+      }
+
+      async function recordUserRegistration(userObj) {
+        if (!userObj || userObj.isLocal || !fbDb) return;
+        try {
+          await fbDb.collection("users").doc(userObj.uid).set({
+            email: userObj.email,
+            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (e) {
+          console.warn("User registration index warning:", e);
+        }
+      }
+
+      async function loadAdminDiagnostics() {
+        const userCountEl = document.getElementById("adminUserCount");
+        if (!userCountEl) return;
+
+        if (!fbDb || (currentUser && currentUser.isLocal)) {
+          userCountEl.textContent = "1 (Local)";
+          return;
+        }
+
+        try {
+          const snapshot = await fbDb.collection("users").get();
+          if (!snapshot.empty) {
+            userCountEl.textContent = snapshot.size.toString();
+          } else {
+            userCountEl.textContent = currentUser ? "1" : "0";
+          }
+        } catch (err) {
+          console.warn("Diagnostics query notice:", err);
+          userCountEl.textContent = currentUser ? "1" : "0";
+        }
       }
 
       btnContinueLocalVault?.addEventListener("click", () => {
@@ -2341,6 +2378,7 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
             switchView("auth");
             return;
           }
+          loadAdminDiagnostics();
           switchView("settings");
         });
 
@@ -2363,6 +2401,7 @@ You MUST respond strictly with a valid JSON object matching this schema with no 
             switchView("auth");
             return;
           }
+          loadAdminDiagnostics();
           switchView("settings");
         });
 
