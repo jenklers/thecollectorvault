@@ -25,6 +25,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   
+  <!-- QRCode.js for Desktop-to-Mobile Handshake -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -893,6 +896,114 @@ const firebaseConfig = {
     </div>
   </div>
 
+  <!-- ================= DESKTOP QR CODE SCAN MODAL ================= -->
+  <div id="modalDesktopQrScan" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+            <i data-lucide="smartphone" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight">Open on Your Phone</h3>
+            <p class="text-xs text-slate-400">Scan &amp; manage your collection on the go</p>
+          </div>
+        </div>
+        <button id="btnCloseDesktopQrModal" class="p-1.5 rounded-full text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Feature Highlight / Value Proposition Box -->
+      <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 space-y-2">
+        <div class="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5 uppercase font-mono tracking-wider">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
+          Why Use Your Phone?
+        </div>
+        <ul class="space-y-1.5 text-xs text-slate-300">
+          <li class="flex items-start gap-2">
+            <i data-lucide="camera" class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5"></i>
+            <span><strong class="text-white">AI Vision Camera:</strong> Snap high-res photos of boxed/loose toys, cards, or comics for instant AI valuation.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5"></i>
+            <span><strong class="text-white">Live Cloud Sync:</strong> Everything you scan or edit on mobile syncs directly into your desktop vault.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- QR Code Stage -->
+      <div class="flex flex-col items-center justify-center py-1">
+        <div class="p-3.5 bg-white rounded-2xl shadow-xl border border-slate-700/50 inline-block">
+          <div id="desktopQrContainer" class="w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center">
+            <!-- Dynamic QR code injected via QRCode.js -->
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-2.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[11px] font-mono text-slate-400">Point phone camera at QR code</span>
+        </div>
+      </div>
+
+      <!-- How to Install on Mobile (Tabs for iOS & Android) -->
+      <div class="pt-2 border-t border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white uppercase font-mono tracking-wider">Install As Mobile App</span>
+          <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-[11px]">
+            <button type="button" id="tabInstallIos" class="px-2.5 py-0.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition-all">iPhone / iPad</button>
+            <button type="button" id="tabInstallAndroid" class="px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all">Android</button>
+          </div>
+        </div>
+
+        <!-- iOS Guide -->
+        <div id="guideIosInstall" class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 text-xs space-y-2 text-slate-300">
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <span>Scan the QR code and open the link in <strong class="text-white">Safari</strong>.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <span>Tap the <strong class="text-white">Share</strong> button <i data-lucide="share" class="w-3.5 h-3.5 inline text-cyan-400 mx-0.5"></i> at the bottom.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <span>Scroll down and select <strong class="text-white">"Add to Home Screen"</strong> <i data-lucide="plus-square" class="w-3.5 h-3.5 inline text-cyan-400 mx-0.5"></i>.</span>
+          </div>
+        </div>
+
+        <!-- Android Guide -->
+        <div id="guideAndroidInstall" class="hidden p-3 bg-slate-950 rounded-xl border border-slate-800/80 text-xs space-y-2 text-slate-300">
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <span>Scan the QR code and open in <strong class="text-white">Chrome</strong>.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <span>Tap the <strong class="text-white">"Install App"</strong> banner or the 3 dots (<strong class="text-white">⋮</strong>) menu.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <span>Select <strong class="text-white">"Install"</strong> or <strong class="text-white">"Add to Home screen"</strong> to get the dedicated app icon.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-2 pt-2 border-t border-slate-800">
+        <button type="button" id="btnCopyScannerUrl" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-700 transition-colors">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>Copy Mobile Link</span>
+        </button>
+        <button type="button" id="btnForceDesktopCamera" class="w-full py-1 text-[11px] text-slate-400 hover:text-slate-200 hover:underline transition-colors">
+          Use computer webcam instead
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= HIGH-RES PHOTO ZOOM LIGHTBOX MODAL ================= -->
   <div id="modalPhotoZoom" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 select-none">
     <div class="flex items-center justify-between text-xs text-slate-300 z-10">
@@ -1300,6 +1411,58 @@ const firebaseConfig = {
     let cameraStream = null;
     let cameraFacingMode = "environment";
     let retakeTargetItemId = null; // Track if scanner was triggered to update an existing item
+
+    function isMobileDevice() {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobileUA = /android|iphone|ipad|ipod|windows phone|iemobile|mobile/i.test(userAgent);
+      const isTouchAndSmall = (navigator.maxTouchPoints > 1) && (window.innerWidth <= 840);
+      return isMobileUA || isTouchAndSmall;
+    }
+
+    function generateMobileScanUrl() {
+      const url = new URL(window.location.href);
+      url.searchParams.set("action", "scan");
+      return url.toString();
+    }
+
+    function openDesktopQrModal() {
+      const modal = document.getElementById("modalDesktopQrScan");
+      const container = document.getElementById("desktopQrContainer");
+      if (!modal || !container) return;
+
+      container.innerHTML = "";
+      const scanUrl = generateMobileScanUrl();
+
+      try {
+        if (window.QRCode) {
+          new window.QRCode(container, {
+            text: scanUrl,
+            width: 192,
+            height: 192,
+            colorDark: "#020617",
+            colorLight: "#ffffff",
+            correctLevel: window.QRCode.CorrectLevel.M
+          });
+        } else {
+          // Fallback image using Google Charts API if QRCode library is loading
+          container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(scanUrl)}" alt="Scan QR Code" class="w-48 h-48 rounded-lg">`;
+        }
+      } catch (err) {
+        console.warn("QR Code render error:", err);
+        container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(scanUrl)}" alt="Scan QR Code" class="w-48 h-48 rounded-lg">`;
+      }
+
+      modal.classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function handleScannerTrigger(targetItemId = null) {
+      if (isMobileDevice()) {
+        startCamera(targetItemId);
+      } else {
+        openDesktopQrModal();
+      }
+    }
 
     function formatModelShortLabel(modelName) {
       if (!modelName) return "Vision OK";
@@ -2837,12 +3000,59 @@ Return ONLY a valid JSON object matching:
 
       btnSourceCamera?.addEventListener("click", () => {
         modalPhotoSource?.classList.add("hidden");
-        triggerRetakeForCurrentDrawerItem();
+        handleScannerTrigger(document.getElementById("drawerItemId")?.value || null);
       });
 
       btnSourceUpload?.addEventListener("click", () => {
         modalPhotoSource?.classList.add("hidden");
         fileDrawerReplace?.click();
+      });
+
+      // Desktop QR Code Modal Controls
+      const modalDesktopQr = document.getElementById("modalDesktopQrScan");
+      document.getElementById("btnCloseDesktopQrModal")?.addEventListener("click", () => {
+        modalDesktopQr?.classList.add("hidden");
+      });
+
+      // Tab switcher for iOS / Android installation guide in QR modal
+      const tabIos = document.getElementById("tabInstallIos");
+      const tabAndroid = document.getElementById("tabInstallAndroid");
+      const guideIos = document.getElementById("guideIosInstall");
+      const guideAndroid = document.getElementById("guideAndroidInstall");
+
+      tabIos?.addEventListener("click", () => {
+        tabIos.className = "px-2.5 py-0.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition-all";
+        tabAndroid.className = "px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all";
+        guideIos?.classList.remove("hidden");
+        guideAndroid?.classList.add("hidden");
+      });
+
+      tabAndroid?.addEventListener("click", () => {
+        tabAndroid.className = "px-2.5 py-0.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition-all";
+        tabIos.className = "px-2.5 py-0.5 rounded-lg text-slate-400 hover:text-white transition-all";
+        guideAndroid?.classList.remove("hidden");
+        guideIos?.classList.add("hidden");
+      });
+
+      document.getElementById("btnCopyScannerUrl")?.addEventListener("click", () => {
+        const scanUrl = generateMobileScanUrl();
+        try {
+          const temp = document.createElement("textarea");
+          temp.value = scanUrl;
+          temp.style.position = "fixed";
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+          showToast("Copied mobile scanner URL to clipboard!", "success");
+        } catch (_) {
+          showToast(`URL: ${scanUrl}`, "info");
+        }
+      });
+
+      document.getElementById("btnForceDesktopCamera")?.addEventListener("click", () => {
+        modalDesktopQr?.classList.add("hidden");
+        startCamera(null);
       });
 
       // Photo Zoom Modal Handlers
@@ -2919,8 +3129,8 @@ Return ONLY a valid JSON object matching:
       });
 
       // Collector Vault Actions
-      document.getElementById("btnStartScan")?.addEventListener("click", () => startCamera(null));
-      document.getElementById("btnEmptyScanTrigger")?.addEventListener("click", () => startCamera(null));
+      document.getElementById("btnStartScan")?.addEventListener("click", () => handleScannerTrigger(null));
+      document.getElementById("btnEmptyScanTrigger")?.addEventListener("click", () => handleScannerTrigger(null));
       document.getElementById("btnCloseScanner")?.addEventListener("click", () => {
         stopCamera();
         document.getElementById("modalScanner").classList.add("hidden");
@@ -2933,6 +3143,16 @@ Return ONLY a valid JSON object matching:
         cameraFacingMode = cameraFacingMode === "environment" ? "user" : "environment";
         startCamera();
       });
+
+      // Auto-trigger scanner if launched via QR code (?action=scan)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("action") === "scan") {
+        setTimeout(() => {
+          if (currentUser) {
+            startCamera(null);
+          }
+        }, 800);
+      }
 
       // Mobile Bottom Navigation Bar Listeners
       document.getElementById("btnMobileNavVault")?.addEventListener("click", () => {
